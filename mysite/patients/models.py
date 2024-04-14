@@ -13,7 +13,44 @@ class Patient(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=100)
     age = models.IntegerField()
-    doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE, related_name="patients")
+    doctors = models.ManyToManyField(Doctor, related_name="patients")
 
     def __str__(self):
-        return f"{self.name}, age {self.age}"
+        return f"{self.name}"
+
+class LabTechnician(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
+    name = models.CharField(max_length=100)
+    specialty = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"{self.name} ({self.specialty})"
+
+class Test(models.Model):
+    name = models.CharField(max_length=100)
+    notes = models.TextField()
+    result = models.TextField()
+    price = models.IntegerField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.name}"
+    
+class Accountant(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"{self.name} ({self.specialty})"
+    
+class Session(models.Model):
+    name = models.CharField(max_length=100)
+    doctor = models.ManyToManyField(Doctor, related_name="sessions")
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
+    date = models.DateField()
+    time = models.TimeField()
+    notes = models.TextField()
+    totalPayment = models.IntegerField()
+    test = models.ManyToManyField(Test, related_name="sessions", blank=True)
+
+    def __str__(self):
+        return f"{self.doctor} - {self.patient} ({self.date} {self.time})"
