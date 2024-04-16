@@ -5,6 +5,27 @@ from django.contrib import admin
 from .models import Doctor, Patient, LabTechnician, Test, Accountant, Session, TestResult
 from django import forms
 from django.contrib.auth.models import User
+from django.contrib.auth.admin import UserAdmin
+from django.http import HttpResponseRedirect
+
+# # First, unregister the existing User admin
+# admin.site.unregister(User)
+
+# # Now, create a custom UserAdmin class
+# class CustomUserAdmin(UserAdmin):
+#     def has_view_permission(self, request, obj=None):
+#         # This function is called to check if the history button should be visible
+#         if request.path.endswith('history/'):
+#             return False
+#         return super().has_view_permission(request, obj)
+
+#     def history_view(self, request, object_id, extra_context=None):
+#         # This function renders the history page
+#         # You can either raise a PermissionDenied error or simply not call the parent method
+#         return HttpResponseRedirect('/admin/auth/user/')
+
+# # Finally, register your custom UserAdmin
+# admin.site.register(User, CustomUserAdmin)
 
 class DoctorAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
@@ -21,6 +42,12 @@ class DoctorAdmin(admin.ModelAdmin):
         elif hasattr(request.user, 'patient'):
              return qs.filter(patients=request.user.patient)
         return qs.none()
+
+    def history_view(self, request, object_id, extra_context=None):
+        # This function renders the history page
+        # You can either raise a PermissionDenied error or simply not call the parent method
+        # show http response that you dont have permission
+        return HttpResponseRedirect('/admin/')
 
     list_display = ['name', 'specialty']
 
@@ -62,7 +89,12 @@ class PatientAdmin(admin.ModelAdmin):
         elif hasattr(request.user, 'patient'):
             return qs.filter(id=request.user.patient.id)
         return qs.none()
-
+    
+    def history_view(self, request, object_id, extra_context=None):
+        # This function renders the history page
+        # You can either raise a PermissionDenied error or simply not call the parent method
+        # show http response that you dont have permission
+        return HttpResponseRedirect('/admin/')
     list_display = ['name', 'age']
 
     # def display_doctors(self, obj):
@@ -156,6 +188,12 @@ class SessionAdmin(admin.ModelAdmin):
                    print('totalPayment changed')
                    form.changed_data.remove('totalPayment')
          super().save_model(request, obj, form, change)
+
+    def history_view(self, request, object_id, extra_context=None):
+        # This function renders the history page
+        # You can either raise a PermissionDenied error or simply not call the parent method
+        # show http response that you dont have permission
+        return HttpResponseRedirect('/admin/')
     
     # list_display = ['patient', 'display_doctors', 'date']
 
@@ -213,6 +251,13 @@ class TestResultAdmin(admin.ModelAdmin):
         if not obj.pk and hasattr(request.user, 'labtechnician'):
             obj.labTechnician = request.user.labtechnician
         super().save_model(request, obj, form, change)
+
+    def history_view(self, request, object_id, extra_context=None):
+        # This function renders the history page
+        # You can either raise a PermissionDenied error or simply not call the parent method
+        # show http response that you dont have permission
+        return HttpResponseRedirect('/admin/')
+    
     list_display = ['session', 'test', 'result', 'labTechnician']
     
     # def save_related(self, request, form, formsets, change):
