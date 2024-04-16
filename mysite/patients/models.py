@@ -29,7 +29,6 @@ class LabTechnician(models.Model):
 class Test(models.Model):
     name = models.CharField(max_length=100)
     notes = models.TextField()
-    result = models.TextField()
     price = models.IntegerField(null=True, blank=True)
 
     def __str__(self):
@@ -42,6 +41,8 @@ class Accountant(models.Model):
     def __str__(self):
         return f"{self.name} ({self.specialty})"
     
+    
+
 class Session(models.Model):
     name = models.CharField(max_length=100)
     doctor = models.ManyToManyField(Doctor, related_name="sessions")
@@ -49,8 +50,21 @@ class Session(models.Model):
     date = models.DateField()
     time = models.TimeField()
     notes = models.TextField()
-    totalPayment = models.IntegerField()
+    totalPayment = models.IntegerField(null=True, blank=True)
     test = models.ManyToManyField(Test, related_name="sessions", blank=True)
+    labTechnician = models.ForeignKey(LabTechnician, on_delete=models.CASCADE, null=True, blank=True)
+    # testResults = models.ManyToManyField(TestResult, through='TestResult', related_name="sessions", blank=True)
 
     def __str__(self):
-        return f"{self.doctor} - {self.patient} ({self.date} {self.time})"
+        return f"Session - {self.name}"
+    
+class TestResult(models.Model):
+    session = models.ForeignKey(Session, on_delete=models.CASCADE)
+    test = models.ForeignKey(Test, on_delete=models.CASCADE)
+    result = models.TextField()
+    labTechnician = models.ForeignKey(LabTechnician, on_delete=models.CASCADE)
+    date = models.DateField()
+    time = models.TimeField()
+
+    def __str__(self):
+        return f"{self.session} - {self.test} ({self.date} {self.time})"
