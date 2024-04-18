@@ -1,5 +1,6 @@
 from cgi import test
 from math import e
+import random
 from re import T
 from django.contrib import admin
 from .models import Doctor, Patient, LabTechnician, Test, Accountant, Session, TestResult
@@ -47,9 +48,13 @@ class DoctorAdmin(admin.ModelAdmin):
         # This function renders the history page
         # You can either raise a PermissionDenied error or simply not call the parent method
         # show http response that you dont have permission
+        # only admin can view history
+        if request.user.is_superuser:
+            return super().history_view(request, object_id, extra_context)
         return HttpResponseRedirect('/admin/')
 
     list_display = ['name', 'specialty']
+admin.site.register(Doctor, DoctorAdmin)
 
 class PatientAdmin(admin.ModelAdmin):
     def get_fields(self, request, obj=None):
@@ -62,17 +67,17 @@ class PatientAdmin(admin.ModelAdmin):
         if hasattr(request.user, 'patient'):
             return fields
         if hasattr(request.user, 'doctor'):
-             for i in fields:
-                  if i == 'doctors':
-                         fields.remove(i)
+            for i in ['doctors']:
+                if i in fields:
+                    fields.remove(i)
         if hasattr(request.user, 'labtechnician'):
-             for i in fields:
-                  if i == 'doctors':
-                       fields.remove(i)
+            for i in ['doctors']:
+                    if i in fields:
+                        fields.remove(i)
         if hasattr(request.user, 'accountant'):
-             for i in fields:
-                  if i == 'doctors':
-                       fields.remove(i)
+            for i in ['doctors']:
+                    if i in fields:
+                        fields.remove(i)
                                
         return fields
     def get_queryset(self, request):
@@ -94,14 +99,15 @@ class PatientAdmin(admin.ModelAdmin):
         # This function renders the history page
         # You can either raise a PermissionDenied error or simply not call the parent method
         # show http response that you dont have permission
+        # only admin can view history
+        if request.user.is_superuser:
+            return super().history_view(request, object_id, extra_context)
         return HttpResponseRedirect('/admin/')
     list_display = ['name', 'age']
 
     # def display_doctors(self, obj):
     #     return ", ".join([doctor.name for doctor in obj.doctors.all()])
     # display_doctors.short_description = 'Doctors'
-
-admin.site.register(Doctor, DoctorAdmin)
 admin.site.register(Patient, PatientAdmin)
 
 
@@ -120,7 +126,7 @@ class SessionAdmin(admin.ModelAdmin):
         elif hasattr(request.user, 'labtechnician'):
             return qs.filter(labTechnician=request.user.labtechnician)
         elif hasattr(request.user, 'accountant'):
-            return qs #modify this
+            return qs.filter(accountant=request.user.accountant)
         elif hasattr(request.user, 'patient'):
             return qs.filter(patient=request.user.patient)
         return qs.none()
@@ -131,17 +137,17 @@ class SessionAdmin(admin.ModelAdmin):
         '''
         fields = super().get_fields(request, obj)
         if hasattr(request.user, 'doctor'):
-            for i in fields:
-                 if i == 'totalPayment':
-                      fields.remove(i)
+            for i in ['totalPayment','accountant']:
+                if i in fields:
+                    fields.remove(i)
         elif hasattr(request.user, 'labtechnician'):
-             for i in fields:
-                  if i in ['doctor', 'patient', 'date', 'time', 'notes', 'totalPayment']:
-                       fields.remove(i)
+             for i in ['doctor', 'patient', 'date', 'time', 'notes', 'totalPayment','accountant']:
+                    if i in fields:
+                        fields.remove(i)
         elif hasattr(request.user, 'accountant'):
-             for i in fields:
-                  if i in ['doctor', 'patient', 'date', 'time', 'notes']:
-                       fields.remove(i)
+                for i in ['doctor', 'patient', 'date', 'time', 'notes']:
+                        if i in fields:
+                            fields.remove(i)
         return fields
     
     def has_add_permission(self, request):
@@ -169,6 +175,11 @@ class SessionAdmin(admin.ModelAdmin):
         if hasattr(request.user, 'doctor'):
             obj = form.instance
             obj.doctor.add(request.user.doctor)
+            # add any accountant at random
+            accountants = Accountant.objects.all()
+            if accountants:
+                random_accountant = random.choice(accountants)
+                obj.accountant = random_accountant
             obj.save()
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
@@ -256,6 +267,9 @@ class TestResultAdmin(admin.ModelAdmin):
         # This function renders the history page
         # You can either raise a PermissionDenied error or simply not call the parent method
         # show http response that you dont have permission
+        # only lab technicians can view history
+        if hasattr(request.user, 'labtechnician'):
+            return super().history_view(request, object_id, extra_context)
         return HttpResponseRedirect('/admin/')
     
     list_display = ['session', 'test', 'result', 'labTechnician']

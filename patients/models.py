@@ -39,7 +39,7 @@ class Accountant(models.Model):
     name = models.CharField(max_length=100)
 
     def __str__(self):
-        return f"{self.name} ({self.specialty})"
+        return f"{self.name} accounts"
     
     
 
@@ -53,6 +53,7 @@ class Session(models.Model):
     totalPayment = models.IntegerField(null=True, blank=True)
     test = models.ManyToManyField(Test, related_name="sessions", blank=True)
     labTechnician = models.ForeignKey(LabTechnician, on_delete=models.CASCADE, null=True, blank=True)
+    accountant = models.ForeignKey(Accountant, on_delete=models.CASCADE, null=True, blank=True)
     # testResults = models.ManyToManyField(TestResult, through='TestResult', related_name="sessions", blank=True)
 
     def __str__(self):
